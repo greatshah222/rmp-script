@@ -1,13 +1,27 @@
 "use client";
+
+import React, { useEffect, useTransition } from "react";
+import { useIsClient } from "usehooks-ts";
+
 import { usePlayerSetting } from "@/hooks/player-setting-hook";
-import React, { useEffect, useState, useTransition } from "react";
 
-export const VideoPlayer = ({ src, id, useAudioPlayer, videoInfo, playerConfig }) => {
-	const [isMounted, setisMounted] = useState(false);
+import { Wrapper } from "./wrapper";
+import { rmpSettings } from "@/lib/rmp-settings";
+import { extractGroupItemIds } from "@/lib/extract-groupItemids";
 
+export const VideoPlayer = ({
+	src,
+	id,
+	useAudioPlayer,
+	videoInfo,
+	playerConfig,
+	subtitleOnDefault,
+	defaultSubtitlesLanguage,
+}) => {
 	const [state, getPlayerSetting] = usePlayerSetting();
-
 	const [isPending, startTransition] = useTransition();
+
+	const isClient = useIsClient();
 
 	useEffect(() => {
 		if (playerConfig) {
@@ -18,74 +32,43 @@ export const VideoPlayer = ({ src, id, useAudioPlayer, videoInfo, playerConfig }
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [playerConfig]);
 
-	useEffect(() => {
-		if (isMounted && window.RadiantMP && src && Object.keys(src).length > 0 && !isPending) {
-			const settings = {
-				licenseKey: "Kl8lMD1jcys9a3o2Mjc5P3JvbTVkYXNpczMwZGIwQSVfKg==",
-				src: src,
-				// width: "100%",
-				// height: "100%",
-				audioOnly: useAudioPlayer,
-				licenseKey: state.licenseKey,
+	if (!isClient) return null;
 
-				width: state.width,
-				height: state.height,
-				// if autoHeightMode is true -<width is set to 100% and height adjusted accordingly
+	if (isPending) return <>is loading</>;
 
-				autoHeightMode: true,
-				autoHeightModeRatio: state.autoHeightModeRatio,
-
-				// The 4 player skins ('s1', 's2', 'outstream', 'tv') can easily be colorized using the following player settings.
-				skin: state.skin,
-				// This setting will colorize the background of the skin. Default to ''.
-
-				skinBackgroundColor: state.skinBackgroundColor,
-				skinButtonColor: state.skinButtonColor,
-				skinAccentColor: state.skinAccentColor,
-
-				speed: state.speed,
-				automaticFullscreenOnLandscape: state.automaticFullscreenOnLandscape,
-				sharing: state.sharing,
-				autoplay: state.autoplay,
-
-				// logo start
-
-				logo: state.logo,
-
-				logoPosition: state.logoPosition,
-				logoLoc: state.logoLoc,
-
-				logoWatermark: state.logoWatermark,
-				// logo ends
-				allowLocalStorage: false,
-			};
-			const elementID = `rmp-${id}`;
-			const rmp = new window.RadiantMP(elementID);
-			rmp?.init(settings);
-		}
-		// Clean up function
-		return () => {
-			// Perform any cleanup here, if necessary
-		};
-	}, [id, isMounted, src, useAudioPlayer, isPending]); // empty dependency array to run only once on mount
-
-	useEffect(() => {
-		setisMounted(true);
-	}, []);
-
-	if (!isMounted) {
-		return null;
-	}
 	if (!src || Object.keys(src).length === 0) {
-		return <div>No source found</div>;
+		return <div>You dont have access to video or video does not have any playable source</div>;
+	}
+	let subtitles = videoInfo?.rmpSubtitles || [];
+
+	if (subtitles?.length > 0) {
+		if (defaultSubtitlesLanguage) {
+			const selectedSubtitle = subtitles?.find((el) => el?.[0]?.includes(defaultSubtitlesLanguage));
+			const index = subtitles?.indexOf(selectedSubtitle);
+
+			if (index >= 0) {
+				subtitles[index][3] = "default";
+			}
+		} else if (subtitleOnDefault) {
+			subtitles[0][3] = "default";
+		}
 	}
 
+	const settings = rmpSettings(src, subtitles, useAudioPlayer, state);
+
+	const groupItemIds = extractGroupItemIds(videoInfo?.groupsInfo);
+
+	console.log("groupItemIds", groupItemIds);
 	return (
-		<div
-			style={{
-				backgroundImage: `url(${state.playerbackgroundImage})`,
-			}}
-			id={`rmp-${id}`}
-		></div>
+		<Wrapper
+			state={state}
+			src={src}
+			id={id}
+			useAudioPlayer={useAudioPlayer}
+			videoInfo={videoInfo}
+			subtitles={subtitles}
+			settings={settings}
+			groupItemIds={groupItemIds}
+		/>
 	);
 };

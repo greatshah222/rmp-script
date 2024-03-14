@@ -1,13 +1,15 @@
 "use client";
 import { usePlayerSetting } from "@/hooks/player-setting-hook";
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
+import { useEventListener } from "usehooks-ts";
 
-export const VideoPlayer = ({ src, id, useAudioPlayer, videoInfo, playerConfig }) => {
+export const VideoPlayer3 = ({ src, id, useAudioPlayer, videoInfo, playerConfig }) => {
 	const [isMounted, setisMounted] = useState(false);
 
 	const [state, getPlayerSetting] = usePlayerSetting();
 
 	const [isPending, startTransition] = useTransition();
+	const videoRef = useRef();
 
 	useEffect(() => {
 		if (playerConfig) {
@@ -72,6 +74,7 @@ export const VideoPlayer = ({ src, id, useAudioPlayer, videoInfo, playerConfig }
 	useEffect(() => {
 		setisMounted(true);
 	}, []);
+	const ev = useEventListener("play", playHandler, videoRef);
 
 	if (!isMounted) {
 		return null;
@@ -80,8 +83,13 @@ export const VideoPlayer = ({ src, id, useAudioPlayer, videoInfo, playerConfig }
 		return <div>No source found</div>;
 	}
 
+	const playHandler = () => {
+		console.log("first");
+	};
+
 	return (
 		<div
+			ref={videoRef}
 			style={{
 				backgroundImage: `url(${state.playerbackgroundImage})`,
 			}}
