@@ -13,10 +13,12 @@ const playerConfigReducer = (state, action) => {
 
 export const usePlayerSetting = () => {
 	const initialState = {
+		autoplay: false,
+
 		skin: "s1",
 		skinBackgroundColor: "rgba(33, 33, 33, 0.85)",
 		skinButtonColor: "rgba(255, 255, 255, 1)",
-		speed: true,
+		speed: false,
 		automaticFullscreenOnLandscape: false,
 		ads: false,
 
@@ -26,6 +28,7 @@ export const usePlayerSetting = () => {
 		logoLoc: "",
 		logoWatermark: false,
 		autoHeightModeRatio: 1.7777777778,
+		responsive: true,
 
 		width: "640px",
 		height: "360px",
@@ -42,48 +45,75 @@ export const usePlayerSetting = () => {
 	const [state, dispatch] = useReducer(playerConfigReducer, initialState);
 
 	const getPlayerSetting = async (playerConfig, host) => {
-		// skin
-		let curSkin = playerConfig?.items?.find((el) => el.title === "skin")?.value;
+		console.log("playerCOofig", playerConfig);
 
-		dispatch({ type: "skin", payload: curSkin ? curSkin : "s1" });
-
-		// skin background color
-
-		let curSkinBacgroundColor = playerConfig?.items?.find(
-			(el) => el.title === "skin-background-color"
-		)?.value;
-
-		curSkinBacgroundColor = removeHexColorSymbol(curSkinBacgroundColor);
-
-		curSkinBacgroundColor &&
+		// autoplay;
+		let curAutoplay = playerConfig?.items?.find((el) => el.title === "autoplay")?.value;
+		curAutoplay &&
 			dispatch({
-				type: "skinBackgroundColor",
-				payload: curSkinBacgroundColor,
+				type: "autoplay",
+				payload: curAutoplay,
 			});
 
-		// skin button color
+		// width of player
+		let curWidth = playerConfig?.items?.find((el) => el.title === "width")?.value;
+		if (curWidth) {
+			curWidth &&
+				dispatch({
+					type: "width",
+					payload: curWidth,
+				});
+		}
 
-		let curSkinButtonColor = playerConfig?.items?.find(
-			(el) => el.title === "skin-button-color"
+		// height of player
+		let curHeight = playerConfig?.items?.find((el) => el.title === "height")?.value;
+		if (curHeight) {
+			curHeight &&
+				dispatch({
+					type: "height",
+					payload: curHeight,
+				});
+		}
+
+		// aspect ration
+		let aspectRatio = playerConfig?.items?.find((el) => el.title === "aspect-ratio")?.value;
+		if (aspectRatio) {
+			let dimensions = aspectRatio.split(":");
+			let width = dimensions[0];
+			let height = dimensions[1];
+			aspectRatio = width / height;
+			aspectRatio &&
+				dispatch({
+					type: "autoHeightModeRatio",
+					payload: aspectRatio,
+				});
+		}
+
+		// player background image means they will be used as the background image -<load it all the time
+
+		let playerbackgroundImage = playerConfig?.items?.find(
+			(el) => el.title === "player-background-image"
 		)?.value;
-		curSkinButtonColor = removeHexColorSymbol(curSkinButtonColor);
-		curSkinBacgroundColor &&
-			dispatch({
-				type: "skinButtonColor",
-				payload: curSkinButtonColor,
-			});
+		if (playerbackgroundImage) {
+			playerbackgroundImage &&
+				dispatch({
+					type: "playerbackgroundImage",
+					payload: `${AppConfig.BASE_URL_CDN_IMAGE}/image/image_gallery?img_id=${playerbackgroundImage}&extension=.png`,
+				});
+		}
 
-		// skin accent color
+		// conatainer backgound image(poster image)
 
-		let curSkinAccentColor = playerConfig?.items?.find(
-			(el) => el.title === "skin-accent-color"
+		let containerbackgroundImage = playerConfig?.items?.find(
+			(el) => el.title === "container-background-image"
 		)?.value;
-		curSkinAccentColor = removeHexColorSymbol(curSkinAccentColor);
-		curSkinAccentColor &&
-			dispatch({
-				type: "skinAccentColor",
-				payload: curSkinAccentColor,
-			});
+		if (containerbackgroundImage) {
+			containerbackgroundImage &&
+				dispatch({
+					type: "containerbackgroundImage",
+					payload: `${AppConfig.BASE_URL_CDN_IMAGE}/image/image_gallery?img_id=${containerbackgroundImage}&extension=.png`,
+				});
+		}
 
 		// logo ->url
 
@@ -147,64 +177,48 @@ export const usePlayerSetting = () => {
 
 		// logo and its position ends here
 
-		// aspect ration
-		let aspectRatio = playerConfig?.items?.find((el) => el.title === "aspect-ratio")?.value;
-		if (aspectRatio) {
-			let dimensions = aspectRatio.split(":");
-			let width = dimensions[0];
-			let height = dimensions[1];
-			aspectRatio = width / height;
-			aspectRatio &&
-				dispatch({
-					type: "autoHeightModeRatio",
-					payload: aspectRatio,
-				});
-		}
+		// skin
+		let curSkin = playerConfig?.items?.find((el) => el.title === "skin")?.value;
 
-		// width
-		let curWidth = playerConfig?.items?.find((el) => el.title === "width")?.value;
-		if (curWidth) {
-			curWidth &&
-				dispatch({
-					type: "width",
-					payload: curWidth,
-				});
-		}
-		let curHeight = playerConfig?.items?.find((el) => el.title === "height")?.value;
-		if (curHeight) {
-			curHeight &&
-				dispatch({
-					type: "height",
-					payload: curHeight,
-				});
-		}
-		// player background image means they will be used as the background image -<load it all the time
+		dispatch({ type: "skin", payload: curSkin ? curSkin : "s1" });
 
-		let playerbackgroundImage = playerConfig?.items?.find(
-			(el) => el.title === "player-background-image"
+		// skin background color
+
+		let curSkinBacgroundColor = playerConfig?.items?.find(
+			(el) => el.title === "skin-background-color"
 		)?.value;
-		if (playerbackgroundImage) {
-			playerbackgroundImage &&
-				dispatch({
-					type: "playerbackgroundImage",
-					// payload: playerbackgroundImage,
-					payload: `${AppConfig.BASE_URL_CDN_IMAGE}/image/image_gallery?img_id=${playerbackgroundImage}&extension=.png`,
-				});
-		}
 
-		// conatainer backgound image(poster image)
+		curSkinBacgroundColor = removeHexColorSymbol(curSkinBacgroundColor);
 
-		let containerbackgroundImage = playerConfig?.items?.find(
-			(el) => el.title === "container-background-image"
+		curSkinBacgroundColor &&
+			dispatch({
+				type: "skinBackgroundColor",
+				payload: curSkinBacgroundColor,
+			});
+
+		// skin button color
+
+		let curSkinButtonColor = playerConfig?.items?.find(
+			(el) => el.title === "skin-button-color"
 		)?.value;
-		if (containerbackgroundImage) {
-			containerbackgroundImage &&
-				dispatch({
-					type: "containerbackgroundImage",
-					// payload: containerbackgroundImage,
-					payload: `${AppConfig.BASE_URL_CDN_IMAGE}/image/image_gallery?img_id=${containerbackgroundImage}&extension=.png`,
-				});
-		}
+		curSkinButtonColor = removeHexColorSymbol(curSkinButtonColor);
+		curSkinBacgroundColor &&
+			dispatch({
+				type: "skinButtonColor",
+				payload: curSkinButtonColor,
+			});
+
+		// skin accent color
+
+		let curSkinAccentColor = playerConfig?.items?.find(
+			(el) => el.title === "skin-accent-color"
+		)?.value;
+		curSkinAccentColor = removeHexColorSymbol(curSkinAccentColor);
+		curSkinAccentColor &&
+			dispatch({
+				type: "skinAccentColor",
+				payload: curSkinAccentColor,
+			});
 
 		let playerShareButton = playerConfig?.items?.find(
 			(el) => el.title === "player-share-buttons"
@@ -237,6 +251,22 @@ export const usePlayerSetting = () => {
 		dispatch({
 			type: "sendAnalytics",
 			payload: cursendAnalytics,
+		});
+
+		// SPEED
+		let curSpeed = playerConfig?.items?.find((el) => el?.title === "show-speed-settings")?.value;
+
+		dispatch({
+			type: "speed",
+			payload: curSpeed,
+		});
+		// ADS
+		// let curAds = playerConfig?.items?.find((el) => el?.title === "show-ads")?.value;
+		let curAds = true;
+
+		dispatch({
+			type: "ads",
+			payload: curAds,
 		});
 		return state;
 	};

@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,7 +13,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
 	return (
 		<html lang="en">
-			<body className={inter.className}>{children}</body>
+			<body className={inter.className}>
+				<div className="space-x-10">
+					<Link href="/1">bishal</Link>
+					<Link href="/2">shah</Link>
+				</div>
+
+				{children}
+			</body>
 
 			<Script src="https://cdn.radiantmediatechs.com/rmp/9.6.6/js/rmp.min.js" async />
 		</html>

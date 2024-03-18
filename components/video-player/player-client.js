@@ -3,13 +3,14 @@
 import React, { useEffect, useTransition } from "react";
 import { useIsClient } from "usehooks-ts";
 
-import { usePlayerSetting } from "@/hooks/player-setting-hook";
-
 import { Wrapper } from "./wrapper";
-import { rmpSettings } from "@/lib/rmp-settings";
-import { extractGroupItemIds } from "@/lib/extract-groupItemids";
 
-export const VideoPlayer = ({
+import { rmpSettings } from "@/lib/rmp-settings";
+import { usePlayerSetting } from "@/hooks/player-setting-hook";
+import { extractGroupItemIds } from "@/lib/extract-groupItemids";
+import { setCookie } from "cookies-next";
+
+export const PlayerClient = ({
 	src,
 	id,
 	useAudioPlayer,
@@ -17,11 +18,18 @@ export const VideoPlayer = ({
 	playerConfig,
 	subtitleOnDefault,
 	defaultSubtitlesLanguage,
+	vast_url,
+	deviceId,
+	allowAnalyticsCookies,
+	organizationId,
+	userId,
 }) => {
 	const [state, getPlayerSetting] = usePlayerSetting();
 	const [isPending, startTransition] = useTransition();
 
 	const isClient = useIsClient();
+
+	console.log("videoInfo", videoInfo);
 
 	useEffect(() => {
 		if (playerConfig) {
@@ -31,6 +39,12 @@ export const VideoPlayer = ({
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [playerConfig]);
+
+	useEffect(() => {
+		if (allowAnalyticsCookies && deviceId) {
+			setCookie("device-id-icareus", deviceId);
+		}
+	}, [allowAnalyticsCookies, deviceId]);
 
 	if (!isClient) return null;
 
@@ -43,6 +57,7 @@ export const VideoPlayer = ({
 
 	if (subtitles?.length > 0) {
 		if (defaultSubtitlesLanguage) {
+			// THIS COMES FROM QUERY STRING
 			const selectedSubtitle = subtitles?.find((el) => el?.[0]?.includes(defaultSubtitlesLanguage));
 			const index = subtitles?.indexOf(selectedSubtitle);
 
@@ -54,21 +69,21 @@ export const VideoPlayer = ({
 		}
 	}
 
-	const settings = rmpSettings(src, subtitles, useAudioPlayer, state);
+	const settings = rmpSettings(src, subtitles, useAudioPlayer, state, vast_url);
 
 	const groupItemIds = extractGroupItemIds(videoInfo?.groupsInfo);
 
-	console.log("groupItemIds", groupItemIds);
 	return (
 		<Wrapper
 			state={state}
-			src={src}
 			id={id}
-			useAudioPlayer={useAudioPlayer}
 			videoInfo={videoInfo}
-			subtitles={subtitles}
 			settings={settings}
 			groupItemIds={groupItemIds}
+			vast_url={vast_url}
+			deviceId={deviceId}
+			organizationId={organizationId}
+			userId={userId}
 		/>
 	);
 };
