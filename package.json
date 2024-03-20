@@ -3,6 +3,10 @@
 	"version": "0.1.2",
 	"private": false,
 	"main": "postcss.config.js",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:greatshah222/rmp-script.git"
+	},
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",

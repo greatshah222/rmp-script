@@ -2,13 +2,15 @@
 
 import React, { useEffect, useTransition } from "react";
 import { useIsClient } from "usehooks-ts";
+import { setCookie } from "cookies-next";
 
 import { Wrapper } from "./wrapper";
+import { NoAccess } from "./no-access";
+import { PlayerSkeleton } from "./player-skeleton";
 
-import { rmpSettings } from "@/lib/rmp-settings";
+import { rmpSettings } from "@/lib/video-player/rmp-settings";
 import { usePlayerSetting } from "@/hooks/player-setting-hook";
-import { extractGroupItemIds } from "@/lib/extract-groupItemids";
-import { setCookie } from "cookies-next";
+import { extractGroupItemIds } from "@/lib/video-player/extract-groupItemids";
 
 export const PlayerClient = ({
 	src,
@@ -16,7 +18,7 @@ export const PlayerClient = ({
 	useAudioPlayer,
 	videoInfo,
 	playerConfig,
-	subtitleOnDefault,
+	subtitleOnByDefault,
 	defaultSubtitlesLanguage,
 	vast_url,
 	deviceId,
@@ -28,8 +30,6 @@ export const PlayerClient = ({
 	const [isPending, startTransition] = useTransition();
 
 	const isClient = useIsClient();
-
-	console.log("videoInfo", videoInfo);
 
 	useEffect(() => {
 		if (playerConfig) {
@@ -48,10 +48,10 @@ export const PlayerClient = ({
 
 	if (!isClient) return null;
 
-	if (isPending) return <>is loading</>;
+	if (isPending) return <PlayerSkeleton />;
 
 	if (!src || Object.keys(src).length === 0) {
-		return <div>You dont have access to video or video does not have any playable source</div>;
+		return <NoAccess msg={"You do not have access to this video."} />;
 	}
 	let subtitles = videoInfo?.rmpSubtitles || [];
 
@@ -64,12 +64,12 @@ export const PlayerClient = ({
 			if (index >= 0) {
 				subtitles[index][3] = "default";
 			}
-		} else if (subtitleOnDefault) {
+		} else if (subtitleOnByDefault) {
 			subtitles[0][3] = "default";
 		}
 	}
 
-	const settings = rmpSettings(src, subtitles, useAudioPlayer, state, vast_url);
+	const settings = rmpSettings(src, subtitles, useAudioPlayer, state, vast_url, videoInfo);
 
 	const groupItemIds = extractGroupItemIds(videoInfo?.groupsInfo);
 
@@ -84,6 +84,7 @@ export const PlayerClient = ({
 			deviceId={deviceId}
 			organizationId={organizationId}
 			userId={userId}
+			useAudioPlayer={useAudioPlayer}
 		/>
 	);
 };

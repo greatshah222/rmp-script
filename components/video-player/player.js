@@ -1,7 +1,24 @@
-import { AppConfig } from "@/config";
 import React, { useEffect } from "react";
+import { useIsClient, useMediaQuery } from "usehooks-ts";
+import Image from "next/image";
 
-export const Player = ({ id, createVideoAnalytics, rmp_settings, state }) => {
+import { AppConfig } from "@/config";
+
+export const Player = ({
+	id,
+	createVideoAnalytics,
+	rmp_settings,
+	state,
+	useAudioPlayer,
+	audioContainerImage,
+}) => {
+	const isClient = useIsClient();
+
+	const isXLScreen = useMediaQuery("(min-width: 1920px)");
+	const isMobileScreen = useMediaQuery("(max-width: 599px)");
+
+	const ccFontSize = isXLScreen ? 3 : isMobileScreen ? 1 : 2;
+
 	const registerEventListeners = (rmp, createVideoAnalytics) => {
 		let progressInterval;
 
@@ -9,8 +26,6 @@ export const Player = ({ id, createVideoAnalytics, rmp_settings, state }) => {
 			const isVideoPaused = rmp?.getPaused();
 
 			if (!isVideoPaused) {
-				console.log("i am playing");
-
 				createVideoAnalytics("PROGRESS", rmp?.getCurrentTime(), rmp.getDuration());
 			}
 		};
@@ -34,33 +49,60 @@ export const Player = ({ id, createVideoAnalytics, rmp_settings, state }) => {
 			clearInterval(progressInterval); // Clear interval when player is destroyed
 		});
 	};
-	useEffect(() => {
-		let rmpInstance; // Declare rmpInstance variable to hold the RMP instance
 
-		if (window.RadiantMP) {
+	useEffect(() => {
+		if (window.RadiantMP && isClient) {
 			const elementID = `rmp-${id}`;
 			const rmp = new window.RadiantMP(elementID);
-			rmpInstance = rmp; // Assign the RMP instance to rmpInstance variable
 
 			registerEventListeners(rmp, createVideoAnalytics);
+			let settings = { ...rmp_settings };
+			settings["ccFontSize"] = ccFontSize;
 
-			rmp?.init(rmp_settings);
+			rmp?.init(settings);
 		}
-		// Cleanup function to destroy the RMP instance when the component is unmounted
-		return () => {
-			if (rmpInstance) {
-				// console.log("rmpInstance", rmpInstance?.destroy());
-				// rmpInstance?.destroy(); // Call destroy method on the RMP instance
-			}
-		};
-	}, [id, rmp_settings, createVideoAnalytics]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id, rmp_settings, createVideoAnalytics, isClient]);
 
-	return (
-		<div
-			style={{
-				backgroundImage: `url(${state.playerbackgroundImage})`,
-			}}
-			id={`rmp-${id}`}
-		/>
-	);
+	if (!isClient) return null;
+
+	if (!useAudioPlayer) {
+		return (
+			<div
+				style={{
+					backgroundImage: `url(${state.playerbackgroundImage})`,
+					backgroundRepeat: "no-repeat",
+					paddingTop: "56.25%",
+				}}
+				className="bg-cover bg-no-repeat bg-center"
+				id={`rmp-${id}`}
+			/>
+		);
+	}
+
+	if (useAudioPlayer && audioContainerImage) {
+		return (
+			<div className="bg-black w-full flex justify-center items-center py-10">
+				<div className=" w-[390px] md:w-[480px] h-[480px] md:h-[550px] max-w-[390px] md:max-w-[480px] flex items-center  justify-end  bg-black flex-col relative">
+					<div className="aspect-square relative w-full">
+						<Image
+							src={audioContainerImage}
+							fill
+							alt=""
+							className=" object-contain sm:object-cover"
+						/>
+					</div>
+					<div id={`rmp-${id}`}></div>
+				</div>
+			</div>
+		);
+	}
+
+	if (useAudioPlayer && !audioContainerImage) {
+		return (
+			<div className="flex justify-center">
+				<div id={`rmp-${id}`}></div>
+			</div>
+		);
+	}
 };

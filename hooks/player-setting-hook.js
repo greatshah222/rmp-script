@@ -44,9 +44,7 @@ export const usePlayerSetting = () => {
 
 	const [state, dispatch] = useReducer(playerConfigReducer, initialState);
 
-	const getPlayerSetting = async (playerConfig, host) => {
-		console.log("playerCOofig", playerConfig);
-
+	const getPlayerSetting = async (playerConfig) => {
 		// autoplay;
 		let curAutoplay = playerConfig?.items?.find((el) => el.title === "autoplay")?.value;
 		curAutoplay &&

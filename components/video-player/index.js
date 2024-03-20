@@ -7,24 +7,32 @@ import {
 	getVastUrl,
 	getVodAssetUrl,
 	registerDevice,
-} from "@/lib/vod";
-import { getValueByTitle } from "@/lib/get-value-by-title";
+} from "@/lib/video-player/vod";
+import { getValueByTitle } from "@/lib/video-player/get-value-by-title";
 
 import { PlayerClient } from "./player-client";
 
-export const VideoPlayer = async ({ searchParams, organizationId, assetId, secret, userId }) => {
-	let useAudioPlayer = false;
-	let subtitleOnDefault = false;
+export const VideoPlayer = async ({
+	searchParams,
+	organizationId,
+	assetId,
+	secret,
+	userId,
+	subtitleOnByDefault,
+	playerId,
+}) => {
 	const defaultSubtitlesLanguage = searchParams?.subtitles;
-
 	const deviceIdCookie = getCookie("device-id-icareus", { cookies });
 
-	const { src, videoInfo } =
-		(await getVodAssetUrl(organizationId, assetId, secret, useAudioPlayer)) ?? {};
+	const {
+		src,
+		videoInfo,
+		useAudioPlayer = false,
+	} = (await getVodAssetUrl(organizationId, assetId, secret)) ?? {};
 
 	// if access not granted we can show something else
 
-	const playerConfig = await getPlayerConfig(organizationId);
+	const playerConfig = await getPlayerConfig(organizationId, playerId);
 
 	const showAds = !getValueByTitle(playerConfig?.items, "show-ads");
 	const allowAnalyticsCookies = !getValueByTitle(playerConfig?.items, "allow-analytics-cookies");
@@ -32,7 +40,6 @@ export const VideoPlayer = async ({ searchParams, organizationId, assetId, secre
 	let campaigns, vast_url;
 
 	if (showAds) {
-		// campaigns = await getActiveCampaign(181282321);
 		campaigns = await getActiveCampaign(organizationId);
 	}
 
@@ -41,7 +48,6 @@ export const VideoPlayer = async ({ searchParams, organizationId, assetId, secre
 		const randomIndex = Math.floor(Math.random() * campaigns?.length);
 		const randomCampaingId = campaigns[randomIndex]?.campaignId;
 
-		// vast_url = await getVastUrl(181282321, randomCampaingId, 284385217);
 		vast_url = await getVastUrl(organizationId, randomCampaingId, assetId);
 	}
 
@@ -52,22 +58,19 @@ export const VideoPlayer = async ({ searchParams, organizationId, assetId, secre
 	}
 
 	return (
-		<div className="space-y-7">
-			<PlayerClient
-				src={src}
-				id={assetId}
-				useAudioPlayer={useAudioPlayer}
-				videoInfo={videoInfo}
-				subtitleOnDefault={subtitleOnDefault}
-				playerConfig={playerConfig}
-				defaultSubtitlesLanguage={defaultSubtitlesLanguage}
-				campaigns={campaigns}
-				vast_url={vast_url}
-				allowAnalyticsCookies={allowAnalyticsCookies}
-				deviceId={deviceId}
-				organizationId={organizationId}
-				userId={userId}
-			/>
-		</div>
+		<PlayerClient
+			src={src}
+			id={assetId}
+			useAudioPlayer={useAudioPlayer}
+			videoInfo={videoInfo}
+			playerConfig={playerConfig}
+			subtitleOnByDefault={subtitleOnByDefault}
+			defaultSubtitlesLanguage={defaultSubtitlesLanguage}
+			vast_url={vast_url}
+			deviceId={deviceId}
+			allowAnalyticsCookies={allowAnalyticsCookies}
+			organizationId={organizationId}
+			userId={userId}
+		/>
 	);
 };

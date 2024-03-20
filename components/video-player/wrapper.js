@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 
 import { Player } from "./player";
-import { sendVODAnalytics } from "@/lib/vod";
+import { sendVODAnalytics } from "@/lib/video-player/vod";
 
 const VODAnalyticsListener = {
 	READY: "player_load",
@@ -23,24 +23,23 @@ export const Wrapper = ({
 	groupItemIds,
 	deviceId,
 	organizationId,
+	useAudioPlayer,
 }) => {
 	const createVideoAnalytics = useCallback(
 		async (type, currentTime, duration) => {
-			console.log("type", type);
 			try {
 				const res = await sendVODAnalytics({
 					organizationId,
 					deviceId,
 					assetId: id,
 					createdBy: videoInfo?.createdBy, // WHO CREATED THIS VIDEO
-					eventName: VODAnalyticsListener[type],
+					eventName: VODAnalyticsListener?.[type],
 					duration: duration ? duration : -1, // we have pass -1 in ready event
 					currentPosition: Number(currentTime),
 					userId, // WHO IS WATCHING THIS VIDEO
 
-					folderIds: groupItemIds ? groupItemIds : 0,
+					folderIds: groupItemIds ? groupItemIds : null,
 				});
-				console.log("anal sent", type);
 
 				return res;
 			} catch (error) {
@@ -51,12 +50,19 @@ export const Wrapper = ({
 		[deviceId, groupItemIds, id, organizationId, userId, videoInfo?.createdBy]
 	);
 
+	let audioContainerImage;
+	if (useAudioPlayer) {
+		audioContainerImage = state.containerbackgroundImage || videoInfo?.thumbnail;
+	}
+
 	return (
 		<Player
 			id={id}
 			createVideoAnalytics={createVideoAnalytics}
 			rmp_settings={settings}
 			state={state}
+			useAudioPlayer={useAudioPlayer}
+			audioContainerImage={audioContainerImage}
 		/>
 	);
 };

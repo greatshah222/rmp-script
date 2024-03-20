@@ -1,5 +1,5 @@
 export const AppConfig = {
-	BASE_URL: "https://api.icareus.com/api",
+	BASE_URL: "https://api.icareus.com/api/admin",
 
 	BASE_URL_CDN: "https://dvcf59enpgt5y.cloudfront.net/api",
 	BASE_URL_CDN_IMAGE: "https://dfhqq4z82gzdx.cloudfront.net",
