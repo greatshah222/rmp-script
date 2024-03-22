@@ -85,6 +85,7 @@ export const PlayerClient = ({
 			organizationId={organizationId}
 			userId={userId}
 			useAudioPlayer={useAudioPlayer}
+			key={id}
 		/>
 	);
 };
